@@ -10,7 +10,7 @@ AIアプリ（ChatGPT・Gemini・Claude）の音声モードを面接官にし�
 - index.html … ツール本体
 - manifest.json … ホーム画面に追加したときの名前・色・アイコン
 - sw.js … オフライン表示と更新のためのサービスワーカー
-- icons/ … アイコン一式
+- icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png / favicon-32.png / icon.svg … アイコン一式（フォルダに入れず、index.htmlと同じ階層に置きます）
 
 ## 公開手順（GitHub Pages）
 
@@ -21,7 +21,7 @@ AIアプリ（ChatGPT・Gemini・Claude）の音声モードを面接官にし�
 
 ## 更新するとき
 
-index.html を直したら、sw.js の先頭の VERSION を 'v1' → 'v2' のように上げてからアップロードしてください。
+index.html を直したら、sw.js の先頭の VERSION を 'v2' → 'v3' のように上げてからアップロードしてください。
 
 ## 学生への案内
 

@@ -1,11 +1,11 @@
 // スマホで模擬面接 サービスワーカー
 // 更新したときは VERSION の数字を上げてください（学生の端末に新しい版が届きます）
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'mensetsu-' + VERSION;
 const FILES = [
   './', './index.html', './manifest.json',
-  './icons/icon-192.png', './icons/icon-512.png',
-  './icons/apple-touch-icon.png', './icons/favicon-32.png'
+  './icon-192.png', './icon-512.png',
+  './apple-touch-icon.png', './favicon-32.png'
 ];
 
 self.addEventListener('install', e => {
