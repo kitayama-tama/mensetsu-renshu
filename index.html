@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>スマホで模擬面接｜就活の木</title>
+<meta name="description" content="AIアプリを面接官にして、24時間いつでも声で面接練習ができるツール">
+<meta name="theme-color" content="#2E5B45">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="模擬面接">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@600;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EAF0EA; --paper:#FFFFFF; --ink:#1C2A23; --sub:#55665C;
+  --moss:#2E5B45; --sprout:#7FB24E; --bark:#8A5A3B; --line:#C9D6CC; --soft:#F3F7F2;
+  --warn-bg:#FBF1E8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141C17; --paper:#1D2721; --ink:#E6EEE8; --sub:#A3B4A9;
+    --moss:#8CC7A4; --sprout:#9BD06A; --bark:#D9A47F; --line:#33443A; --soft:#24302A;
+    --warn-bg:#2E241D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141C17; --paper:#1D2721; --ink:#E6EEE8; --sub:#A3B4A9;
+  --moss:#8CC7A4; --sprout:#9BD06A; --bark:#D9A47F; --line:#33443A; --soft:#24302A;
+  --warn-bg:#2E241D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",Meiryo,sans-serif;
+  font-size:16px;line-height:1.8;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 48px}
+
+/* header with growing sapling */
+header{display:flex;align-items:center;gap:14px;padding:8px 0 18px}
+header svg{flex:none;width:64px;height:64px}
+h1{font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:900;
+  font-size:1.6rem;line-height:1.35;margin:0;letter-spacing:.02em}
+.lead{margin:2px 0 0;color:var(--sub);font-size:.88rem;line-height:1.6}
+.tree-part{transition:opacity .5s ease, transform .5s ease;transform-origin:32px 56px}
+.tree-part.off{opacity:0;transform:scale(.6)}
+@media (prefers-reduced-motion:reduce){.tree-part{transition:none}}
+
+/* stepper */
+.steps{display:flex;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+.steps li{flex:1;font-size:.78rem;color:var(--sub);border-top:4px solid var(--line);padding-top:6px;line-height:1.4}
+.steps li.on{color:var(--ink);border-color:var(--sprout);font-weight:700}
+.steps li.done{border-color:var(--moss)}
+
+section.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 18px}
+section.panel[hidden]{display:none}
+h2{font-family:"Zen Old Mincho","Hiragino Mincho ProN","Yu Mincho",serif;font-weight:600;font-size:1.25rem;margin:0 0 4px;line-height:1.4}
+.desc{color:var(--sub);font-size:.9rem;margin:0 0 18px}
+
+fieldset{border:0;margin:0 0 20px;padding:0}
+legend,label.lbl{display:block;font-weight:700;font-size:.95rem;margin-bottom:6px;padding:0}
+.req{color:var(--bark);font-size:.78rem;font-weight:500;margin-left:6px}
+.hint{display:block;color:var(--sub);font-size:.8rem;font-weight:400;line-height:1.5;margin-top:2px}
+input[type=text],textarea,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--soft);
+  border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+textarea{min-height:110px;resize:vertical;line-height:1.6}
+input:focus,textarea:focus,select:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--sprout);outline-offset:2px}
+.field{margin-bottom:16px}
+
+.choice{display:grid;gap:8px}
+.choice.two{grid-template-columns:1fr 1fr}
+.choice.three{grid-template-columns:repeat(3,1fr)}
+.choice label{display:block;cursor:pointer}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice span{display:block;border:1px solid var(--line);border-radius:10px;padding:10px 10px;background:var(--soft);
+  font-size:.9rem;line-height:1.45;height:100%}
+.choice span small{display:block;color:var(--sub);font-size:.76rem;margin-top:2px}
+.choice input:checked + span{border:2px solid var(--moss);padding:9px;background:var(--paper);font-weight:700}
+.choice input:focus-visible + span{outline:3px solid var(--sprout);outline-offset:2px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:1rem;
+  border:0;border-radius:999px;padding:13px 22px;cursor:pointer;text-decoration:none;min-height:48px}
+.btn.primary{background:var(--moss);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--moss);border:1.5px solid var(--moss)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.row .btn{flex:1 1 140px}
+
+.err{color:var(--bark);font-size:.88rem;margin:8px 0 0;min-height:1.4em}
+
+pre.prompt{white-space:pre-wrap;word-break:break-word;background:var(--soft);border:1px solid var(--line);border-radius:10px;
+  padding:14px;font-family:inherit;font-size:.84rem;line-height:1.65;max-height:320px;overflow:auto;margin:0}
+.check{display:flex;gap:10px;align-items:flex-start;background:var(--warn-bg);border-radius:10px;padding:12px;margin:16px 0 0;font-size:.9rem;line-height:1.6;cursor:pointer}
+.check input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--moss)}
+.toast{font-size:.88rem;color:var(--moss);font-weight:700;min-height:1.5em;margin:8px 0 0;text-align:center}
+
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.apps a{display:block;text-align:center;border:1px solid var(--line);border-radius:10px;padding:12px 6px;color:var(--ink);
+  text-decoration:none;font-weight:700;font-size:.9rem;background:var(--soft);line-height:1.4}
+.apps a small{display:block;font-weight:400;color:var(--sub);font-size:.72rem}
+.note{color:var(--sub);font-size:.8rem;line-height:1.6;margin:10px 0 0}
+
+/* step3 */
+.tabs{display:flex;gap:6px;margin-bottom:12px}
+.tabs button{flex:1;font:inherit;font-size:.9rem;font-weight:700;padding:9px 4px;border-radius:8px;border:1px solid var(--line);
+  background:var(--soft);color:var(--sub);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--moss);color:var(--paper);border-color:var(--moss)}
+ol.howto{margin:0;padding-left:1.4em}
+ol.howto li{margin-bottom:6px}
+h3{font-size:1rem;margin:24px 0 8px}
+.words{display:grid;gap:8px}
+.word{border-left:5px solid var(--sprout);background:var(--soft);border-radius:0 10px 10px 0;padding:10px 14px}
+.word b{font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif;font-size:1.2rem;display:block;line-height:1.5}
+.word span{font-size:.82rem;color:var(--sub)}
+ul.ready{margin:0;padding-left:1.2em}
+ul.ready li{margin-bottom:4px}
+.after{border:1.5px dashed var(--moss);border-radius:12px;padding:14px;margin-top:8px}
+footer{text-align:center;color:var(--sub);font-size:.76rem;margin-top:24px;line-height:1.7}
+.linkbtn{background:none;border:0;color:var(--sub);text-decoration:underline;font:inherit;font-size:.8rem;cursor:pointer;padding:4px}
+/* how-to cards */
+.guide{margin:0 0 22px}
+.guide-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.guide-head h2{font-size:1.1rem;margin:0}
+.cards{position:relative}
+.card{display:none;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px 18px 18px;min-height:210px}
+.card.active{display:block;animation:cardIn .25s ease}
+@keyframes cardIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.card.active{animation:none}}
+.card-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.navbtn{font:inherit;font-weight:700;font-size:.95rem;min-height:44px;padding:8px 16px;border-radius:999px;border:1.5px solid var(--moss);background:transparent;color:var(--moss);cursor:pointer}
+.navbtn.next{background:var(--moss);color:var(--paper)}
+.navbtn:disabled{opacity:.3;cursor:default}
+.card-nav .count{font-size:.85rem;color:var(--sub)}
+.card .num{font-family:"Zen Old Mincho","Hiragino Mincho ProN",serif;font-weight:900;font-size:2.6rem;line-height:1;color:var(--sprout);display:block;margin-bottom:6px}
+.card.prep{background:var(--moss);color:var(--paper);border-color:var(--moss)}
+.card.prep .num{color:var(--paper);font-size:1.6rem;margin-bottom:10px}
+.card h4{font-size:1.02rem;margin:0 0 6px;line-height:1.45}
+.card p{margin:0;font-size:.86rem;line-height:1.65}
+.card.prep ul{margin:0;padding-left:1.1em;font-size:.86rem;line-height:1.7}
+.card .tip{display:block;margin-top:10px;font-size:.76rem;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px;line-height:1.55}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:10px}
+.dots button{width:9px;height:9px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}
+.dots button.on{background:var(--moss);width:20px;border-radius:5px}
+.guide[data-closed="true"] .cards,.guide[data-closed="true"] .card-nav,.guide[data-closed="true"] .dots{display:none}
+@media (max-width:380px){.choice.three{grid-template-columns:1fr}.apps{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="32" cy="58" rx="20" ry="3.5" fill="var(--line)"/>
+    <path d="M32 57 V34" stroke="var(--bark)" stroke-width="3.5" stroke-linecap="round"/>
+    <g class="tree-part" id="t1"><path d="M32 42 C24 42 20 36 21 31 C27 31 32 35 32 42Z" fill="var(--sprout)"/><path d="M32 40 C38 40 43 35 42 29 C36 29 32 33 32 40Z" fill="var(--sprout)"/></g>
+    <g class="tree-part off" id="t2"><circle cx="32" cy="26" r="13" fill="var(--sprout)" opacity=".85"/></g>
+    <g class="tree-part off" id="t3"><circle cx="22" cy="22" r="9" fill="var(--moss)" opacity=".9"/><circle cx="42" cy="21" r="9" fill="var(--moss)" opacity=".9"/><circle cx="32" cy="12" r="9" fill="var(--moss)"/></g>
+  </svg>
+  <div>
+    <h1>スマホで模擬面接</h1>
+    <p class="lead">AIアプリを面接官にして、24時間いつでも声で練習できます。</p>
+  </div>
+</header>
+
+<div class="guide" id="guide" data-closed="false">
+  <div class="guide-head">
+    <h2>使い方</h2>
+    <button class="linkbtn" id="guideToggle" aria-expanded="true" aria-controls="cards">閉じる</button>
+  </div>
+  <div class="cards" id="cards" aria-live="polite" aria-label="使い方カード">
+    <article class="card prep">
+      <span class="num">用意するもの</span>
+      <ul>
+        <li>スマホ</li>
+        <li>AIアプリ（ChatGPT・Gemini・Claudeのどれか。無料でOK）</li>
+        <li>静かな場所とイヤホン</li>
+        <li>15〜20分の時間</li>
+        <li>このページを「ホーム画面に追加」しておくと、次からアプリのように開けます</li>
+      </ul>
+    </article>
+    <article class="card">
+      <span class="num">1</span>
+      <h4>面接の情報を入れる</h4>
+      <p>志望企業と、ESがあれば本文を入力します。ESがまだなくても、選ぶだけで準備できます。</p>
+      <span class="tip">名前や大学名は入れなくて大丈夫です</span>
+    </article>
+    <article class="card">
+      <span class="num">2</span>
+      <h4>文言をコピーしてAIに送る</h4>
+      <p>自動でできた「セッティング文言」をコピーし、AIアプリのチャット欄に貼り付けて文字で送信します。</p>
+      <span class="tip">「準備ができました」と返事が来ればOK</span>
+    </article>
+    <article class="card">
+      <span class="num">3</span>
+      <h4>音声モードで面接</h4>
+      <p>アプリの音声ボタンをタップし、「よろしくお願いします」と話しかけると面接が始まります。10問に声で答えます。</p>
+      <span class="tip">考えるときは「少し考えます」と言いましょう</span>
+    </article>
+    <article class="card">
+      <span class="num">4</span>
+      <h4>文字で振り返る</h4>
+      <p>終わったらチャット画面に戻り、振り返り文言を送ります。良かった点と課題が文字で残ります。</p>
+      <span class="tip">その記録を、大学のキャリアセンターでの相談に持っていくと話が早く進みます</span>
+    </article>
+  </div>
+  <div class="card-nav">
+    <button class="navbtn" id="cardPrev">← 前へ</button>
+    <span class="count" id="cardCount"></span>
+    <button class="navbtn next" id="cardNext">次へ →</button>
+  </div>
+  <div class="dots" id="dots"></div>
+</div>
+
+<ol class="steps" aria-label="進み具合">
+  <li id="s1" class="on">1 情報を入れる</li>
+  <li id="s2">2 文言をコピー</li>
+  <li id="s3">3 声で面接</li>
+</ol>
+
+<!-- STEP 1 -->
+<section class="panel" id="p1" aria-labelledby="h-p1">
+  <h2 id="h-p1">面接の情報を入れる</h2>
+  <p class="desc">入力した内容から、AIに送る「セッティング文言」を自動で作ります。</p>
+
+  <div class="field">
+    <label class="lbl" for="company">志望企業<span class="req">必須</span></label>
+    <input type="text" id="company" placeholder="例：株式会社〇〇" autocomplete="off">
+  </div>
+  <div class="field">
+    <label class="lbl" for="industry">業界<span class="hint">わからなければ空欄でOK</span></label>
+    <input type="text" id="industry" placeholder="例：IT業界、信用金庫、小売業" autocomplete="off">
+  </div>
+  <div class="field">
+    <label class="lbl" for="job">志望職種</label>
+    <input type="text" id="job" placeholder="例：総合職、営業職、エンジニア" autocomplete="off">
+  </div>
+
+  <fieldset>
+    <legend>面接の段階</legend>
+    <div class="choice three">
+      <label><input type="radio" name="stage" value="一次面接" checked><span>一次面接</span></label>
+      <label><input type="radio" name="stage" value="二次面接"><span>二次面接</span></label>
+      <label><input type="radio" name="stage" value="最終面接"><span>最終面接</span></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>ESなどの書類</legend>
+    <div class="choice two">
+      <label><input type="radio" name="docs" value="yes" checked><span>準備してある<small>本文を貼り付ける</small></span></label>
+      <label><input type="radio" name="docs" value="no"><span>まだない<small>選んで簡単に準備</small></span></label>
+    </div>
+  </fieldset>
+
+  <div id="docsYes">
+    <div class="field">
+      <label class="lbl" for="gakuchika">学生時代に力を入れたこと（ガクチカ）</label>
+      <textarea id="gakuchika" placeholder="ESの文章をそのまま貼り付けてください"></textarea>
+    </div>
+    <div class="field">
+      <label class="lbl" for="pr">自己PR</label>
+      <textarea id="pr" placeholder="ESの文章をそのまま貼り付けてください"></textarea>
+    </div>
+    <div class="field">
+      <label class="lbl" for="motive">志望動機</label>
+      <textarea id="motive" placeholder="ESの文章をそのまま貼り付けてください"></textarea>
+    </div>
+  </div>
+
+  <div id="docsNo" hidden>
+    <div class="field">
+      <label class="lbl" for="strength">自分の強みに近いもの</label>
+      <select id="strength">
+        <option value="主体性（物事に進んで取り組む力）">主体性：物事に進んで取り組む</option>
+        <option value="働きかけ力（他人に働きかけ巻き込む力）">働きかけ力：周りを巻き込む</option>
+        <option value="実行力（目的を設定し確実に行動する力）">実行力：決めたことをやりきる</option>
+        <option value="課題発見力（現状を分析し課題を明らかにする力）">課題発見力：問題に気づく</option>
+        <option value="計画力（課題解決のプロセスを準備する力）">計画力：段取りを立てる</option>
+        <option value="創造力（新しい価値を生み出す力）">創造力：新しいアイデアを出す</option>
+        <option value="発信力（自分の意見をわかりやすく伝える力）">発信力：わかりやすく伝える</option>
+        <option value="傾聴力（相手の意見を丁寧に聴く力）">傾聴力：相手の話をよく聴く</option>
+        <option value="柔軟性（意見の違いや立場の違いを理解する力）">柔軟性：違う意見を受け入れる</option>
+        <option value="情況把握力（自分と周囲の関係性を理解する力）">情況把握力：場の状況をつかむ</option>
+        <option value="規律性（社会のルールや人との約束を守る力）">規律性：約束やルールを守る</option>
+        <option value="ストレスコントロール力（ストレスに対応する力）">ストレスコントロール力：落ち着いて対応する</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="lbl" for="activity">打ち込んだこと（ひとこと）</label>
+      <input type="text" id="activity" placeholder="例：飲食店のアルバイトで新人教育を担当" autocomplete="off">
+    </div>
+    <div class="field">
+      <label class="lbl" for="reason">その企業が気になる理由（ひとこと）</label>
+      <input type="text" id="reason" placeholder="例：地元の人の暮らしを支えている会社だから" autocomplete="off">
+    </div>
+  </div>
+
+  <fieldset>
+    <legend>練習のしかた</legend>
+    <div class="choice two">
+      <label><input type="radio" name="mode" value="practice" checked><span>練習モード<small>1問ごとにアドバイス</small></span></label>
+      <label><input type="radio" name="mode" value="real"><span>本番モード<small>アドバイスは最後にまとめて</small></span></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>面接官の雰囲気</legend>
+    <div class="choice three">
+      <label><input type="radio" name="tone" value="gentle"><span>やさしめ</span></label>
+      <label><input type="radio" name="tone" value="normal" checked><span>ふつう</span></label>
+      <label><input type="radio" name="tone" value="strict"><span>やや厳しめ</span></label>
+    </div>
+  </fieldset>
+
+  <p class="err" id="err1" role="alert"></p>
+  <button class="btn primary block" id="toStep2">セッティング文言を作る</button>
+  <p style="text-align:center;margin:10px 0 0"><button class="linkbtn" id="clearAll">入力内容をすべて消す</button></p>
+</section>
+
+<!-- STEP 2 -->
+<section class="panel" id="p2" hidden aria-labelledby="h-p2">
+  <h2 id="h-p2">文言をコピーしてAIに送る</h2>
+  <p class="desc">下の文言をAIアプリのチャット欄に貼り付けて、文字で送信します。</p>
+
+  <pre class="prompt" id="promptOut" tabindex="0" aria-label="セッティング文言"></pre>
+
+  <label class="check">
+    <input type="checkbox" id="privacy">
+    <span>氏名・大学名・電話番号・住所など、自分が特定される情報が入っていないことを確認しました。</span>
+  </label>
+
+  <div class="row">
+    <button class="btn primary" id="copyBtn" disabled>文言をコピーする</button>
+  </div>
+  <p class="toast" id="toast" aria-live="polite"></p>
+
+  <h3>AIアプリを開く</h3>
+  <div class="apps">
+    <a id="openGPT" href="https://chatgpt.com/" target="_blank" rel="noopener">ChatGPT<small>文言が入った状態で開く場合あり</small></a>
+    <a id="openClaude" href="https://claude.ai/new" target="_blank" rel="noopener">Claude<small>文言が入った状態で開く場合あり</small></a>
+    <a href="https://gemini.google.com/app" target="_blank" rel="noopener">Gemini<small>開いたら貼り付け</small></a>
+  </div>
+  <p class="note">入力欄に文言が入っていなければ、長押しして「ペースト」してください。送信したら、このページに戻って次へ進みます。</p>
+
+  <div class="row">
+    <button class="btn ghost" id="back1">入力に戻る</button>
+    <button class="btn primary" id="toStep3">送信した・次へ</button>
+  </div>
+</section>
+
+<!-- STEP 3 -->
+<section class="panel" id="p3" hidden aria-labelledby="h-p3">
+  <h2 id="h-p3">音声モードに切り替えて面接スタート</h2>
+  <p class="desc">ここから先は声だけで進みます。使っているアプリを選んでください。</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-app="gpt">ChatGPT</button>
+    <button role="tab" aria-selected="false" data-app="gemini">Gemini</button>
+    <button role="tab" aria-selected="false" data-app="claude">Claude</button>
+  </div>
+  <ol class="howto" id="howto"></ol>
+  <p class="note">アイコンの形や場所は、アプリの更新で変わることがあります。無料プランでは音声会話の回数や時間に上限があるので、上限に達したら時間をおいて再開してください。</p>
+
+  <h3>始める前に</h3>
+  <ul class="ready">
+    <li>静かな場所で、できればイヤホンを使う</li>
+    <li>背筋を伸ばし、本番と同じ姿勢で話す</li>
+    <li>ひとつの回答は1分くらいを目安にする</li>
+  </ul>
+
+  <h3>面接中に使える言葉</h3>
+  <div class="words">
+    <div class="word"><b>「少し考えます」</b><span>黙って考えていると、AIが話し始めてしまうことがあります</span></div>
+    <div class="word"><b>「もう一度質問をお願いします」</b><span>聞き取れなかったときに</span></div>
+    <div class="word"><b>「面接を終了します」</b><span>途中でやめて、総合フィードバックをもらいたいときに</span></div>
+  </div>
+
+  <h3>終わったら：文字で振り返る</h3>
+  <div class="after">
+    <p style="margin:0 0 8px;font-size:.92rem">音声モードを終了してチャット画面に戻り、次の文言を送ると、振り返りが文字で残ります。大学のキャリアセンター（就職課）で相談するときに見せると、具体的なアドバイスをもらいやすくなります。</p>
+    <pre class="prompt" id="reviewOut" style="max-height:none"></pre>
+    <div class="row"><button class="btn ghost block" id="copyReview">振り返り文言をコピーする</button></div>
+    <p class="toast" id="toast2" aria-live="polite"></p>
+  </div>
+
+  <div class="row">
+    <button class="btn ghost" id="back2">文言に戻る</button>
+    <button class="btn primary" id="restart">別の企業で練習する</button>
+  </div>
+</section>
+
+<footer>
+  AIの評価はひとつの参考意見です。実際の面接官の見方とは異なることがあります。<br>
+  気になった点は、大学のキャリアセンター（就職課）や身近な相談相手と一緒に確認しましょう。<br>
+  制作：就活の木
+</footer>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const val = id => $(id).value.trim();
+  const radio = name => document.querySelector('input[name="'+name+'"]:checked').value;
+  const KEY = 'mensetsu-renshu-v1';
+  const fields = ['company','industry','job','gakuchika','pr','motive','strength','activity','reason'];
+  const radios = ['stage','docs','mode','tone'];
+  let prompt = '';
+
+  /* ---------- save / restore (this browser only) ---------- */
+  function save(){
+    try{
+      const d = {};
+      fields.forEach(f => d[f] = $(f).value);
+      radios.forEach(r => d[r] = radio(r));
+      localStorage.setItem(KEY, JSON.stringify(d));
+    }catch(e){}
+  }
+  function restore(){
+    try{
+      const d = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if(!d) return;
+      fields.forEach(f => { if(d[f] != null) $(f).value = d[f]; });
+      radios.forEach(r => {
+        const el = document.querySelector('input[name="'+r+'"][value="'+d[r]+'"]');
+        if(el) el.checked = true;
+      });
+    }catch(e){}
+  }
+  document.addEventListener('input', save);
+  document.addEventListener('change', save);
+
+  /* ---------- docs toggle ---------- */
+  function toggleDocs(){
+    const yes = radio('docs') === 'yes';
+    $('docsYes').hidden = !yes;
+    $('docsNo').hidden = yes;
+  }
+  document.querySelectorAll('input[name="docs"]').forEach(r => r.addEventListener('change', toggleDocs));
+
+  /* ---------- step navigation ---------- */
+  function go(n){
+    [1,2,3].forEach(i => {
+      $('p'+i).hidden = i !== n;
+      const s = $('s'+i);
+      s.className = i === n ? 'on' : (i < n ? 'done' : '');
+      $('t'+i).classList.toggle('off', i > n);
+    });
+    window.scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+  }
+
+  /* ---------- build prompt ---------- */
+  function build(){
+    const company = val('company');
+    const industry = val('industry');
+    const job = val('job') || '（特に指定なし）';
+    const stage = radio('stage');
+    const mode = radio('mode');
+    const tone = radio('tone');
+    const who = industry ? company + '（業界：' + industry + '）' : company;
+
+    let info;
+    if(radio('docs') === 'yes'){
+      const g = val('gakuchika'), p = val('pr'), m = val('motive');
+      info = '・学生時代に力を入れたこと：\n' + (g || '（未入力）') +
+             '\n・自己PR：\n' + (p || '（未入力）') +
+             '\n・志望動機：\n' + (m || '（未入力）');
+    }else{
+      info = '・ESはまだ準備していません。以下の簡単な情報をもとに質問してください。' +
+             '\n・自分の強み：' + $('strength').value +
+             '\n・打ち込んだこと：' + (val('activity') || '（未入力）') +
+             '\n・この企業が気になる理由：' + (val('reason') || '（未入力）');
+    }
+
+    const toneText = {
+      gentle:'やさしく穏やかな口調で、学生が話しやすい雰囲気をつくってください。',
+      normal:'一般的な面接官として、丁寧で落ち着いた口調で進めてください。',
+      strict:'やや厳しめの面接官として、回答のあいまいな点はきちんと追及してください。ただし威圧的・人格否定的な言い方はしないでください。'
+    }[tone];
+
+    const stageText = {
+      '一次面接':'人柄や基本的なコミュニケーションを確認する一次面接として進めてください。',
+      '二次面接':'経験の深さや考え方、志望度を確認する二次面接として、深掘りを多めに進めてください。',
+      '最終面接':'役員による最終面接として、入社意欲・価値観・将来像を中心に確認してください。'
+    }[stage];
+
+    const modeLines = mode === 'practice'
+      ? '3. 各テーマのやり取りが終わったら、フィードバックの前に「今の回答を自分で何点だと思いますか？言いきれなかった点はどこですか？」と私に聞いてください。\n' +
+        '4. 私の自己評価を聞いたあと、「良かった点」と「改善点」を1つずつ、短く伝えてください。'
+      : '3. 途中ではフィードバックをせず、本番の面接と同じように質問だけを続けてください。\n' +
+        '4. 回答が長すぎた場合や話がそれた場合も、その場では指摘せず、最後の総合フィードバックで伝えてください。';
+
+    return (
+'あなたは【' + who + '】の採用面接官です。\n' +
+'これから早期選考の模擬面接（' + stage + '）を行います。\n' +
+'これは音声会話で行う練習です。以下の【ルール】を守って進行してください。\n\n' +
+'【前提情報】\n' +
+'・志望企業：' + company + '\n' +
+'・志望職種：' + job + '\n' +
+info + '\n\n' +
+'【モード】' + (mode === 'practice' ? '練習モード（1問ごとにフィードバック）' : '本番モード（フィードバックは最後にまとめて）') + '\n\n' +
+'【ルール】\n' +
+'1. 質問は必ず1問ずつ。話し言葉で、短く自然に聞いてください。\n' +
+'2. 私の回答に対して、必要に応じて1〜2回「深掘り質問」をしてください。深掘りの観点は「Why（なぜそうしたか）」「How（具体的にどう行動したか）」「More better（今ならどう改善するか）」です。\n' +
+modeLines + '\n' +
+(mode === 'practice' ? '5. 回答が長すぎる（1分以上）場合は、その点も指摘してください。\n' : '5. 回答の長さ（1分程度が目安）も評価に含めてください。\n') +
+'6. 面接の雰囲気：' + toneText + '\n' +
+'7. ' + stageText + '\n' +
+'8. 以下の10テーマを順番に進めてください。\n' +
+'   Q1. 自己紹介\n' +
+'   Q2. 学生時代に最も打ち込んだこと（ガクチカ）\n' +
+'   Q3. その活動で直面した困難と乗り越え方\n' +
+'   Q4. 周囲やチームと関わる中で意識したこと\n' +
+'   Q5. あなたの強み（自己PR）\n' +
+'   Q6. あなたの弱み・課題と改善への取り組み\n' +
+'   Q7. 当社・この業界を志望する理由\n' +
+'   Q8. 入社後に挑戦したい仕事やキャリアイメージ\n' +
+'   Q9. 最近関心を持った業界のニュースや出来事\n' +
+'   Q10. 逆質問（何か質問はありますか？）\n' +
+'9. 私が「少し考えます」と言ったら、話しかけずに待ってください。\n' +
+'10. 私が「もう一度質問をお願いします」と言ったら、同じ質問を言い換えて繰り返してください。\n' +
+'11. 私が「面接を終了します」と言ったら、その時点で終了し、総合フィードバックに移ってください。\n' +
+'12. 最後に、面接全体の総合フィードバック（良かった点3つ、次回までの課題3つ）を伝えてください。\n\n' +
+'この文章を受け取ったら、「準備ができました。音声モードに切り替えて、話しかけてください」とだけ返事をしてください。\n' +
+'私が音声で話しかけたら、面接官らしく挨拶をして、第1問を投げかけてください。'
+    );
+  }
+
+  const REVIEW =
+'今の模擬面接を振り返り、次の形で文字にまとめてください。\n' +
+'1. 総合評価（ひとこと）\n' +
+'2. 良かった点を3つ\n' +
+'3. 次回までの課題を3つ（具体的な言い直し例をつけて）\n' +
+'4. うまく答えられなかった質問と、そのときの私の回答の要点\n' +
+'5. 次の練習で重点的に聞いてほしい質問を3つ';
+
+  /* ---------- copy helper ---------- */
+  async function copyText(text, toastId){
+    let ok = false;
+    try{ await navigator.clipboard.writeText(text); ok = true; }catch(e){
+      try{
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly','');
+        ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      }catch(e2){}
+    }
+    $(toastId).textContent = ok ? 'コピーしました。AIアプリに貼り付けてください。' : 'コピーできませんでした。文言を長押しして選択し、コピーしてください。';
+  }
+
+  /* ---------- events ---------- */
+  $('toStep2').addEventListener('click', () => {
+    if(!val('company')){
+      $('err1').textContent = '志望企業を入力してください。';
+      $('company').focus();
+      return;
+    }
+    $('err1').textContent = '';
+    prompt = build();
+    $('promptOut').textContent = prompt;
+    const q = encodeURIComponent(prompt);
+    $('openGPT').href = 'https://chatgpt.com/?q=' + q;
+    $('openClaude').href = 'https://claude.ai/new?q=' + q;
+    $('privacy').checked = false;
+    $('copyBtn').disabled = true;
+    $('toast').textContent = '';
+    go(2);
+  });
+  $('privacy').addEventListener('change', e => { $('copyBtn').disabled = !e.target.checked; });
+  $('copyBtn').addEventListener('click', () => copyText(prompt, 'toast'));
+  $('back1').addEventListener('click', () => go(1));
+  $('toStep3').addEventListener('click', () => go(3));
+  $('back2').addEventListener('click', () => go(2));
+  $('restart').addEventListener('click', () => {
+    $('company').value=''; $('industry').value=''; $('motive').value=''; $('reason').value='';
+    save(); go(1); $('company').focus();
+  });
+  $('copyReview').addEventListener('click', () => copyText(REVIEW, 'toast2'));
+  $('clearAll').addEventListener('click', () => {
+    if(!confirm('入力した内容をすべて消しますか？')) return;
+    fields.forEach(f => { if(f !== 'strength') $(f).value = ''; });
+    $('strength').selectedIndex = 0;
+    try{ localStorage.removeItem(KEY); }catch(e){}
+  });
+
+  /* ---------- app how-to ---------- */
+  const HOW = {
+    gpt:[
+      'セッティング文言を送信し、「準備ができました」と返事が来るのを確認する',
+      '入力欄の右側にある音声会話のボタン（波形のアイコン）をタップする',
+      '画面が音声モードに変わったら「よろしくお願いします」と話しかける',
+      '面接官の挨拶と第1問が始まったら、声で答えていく'
+    ],
+    gemini:[
+      'セッティング文言を送信し、返事が来るのを確認する',
+      '入力欄の近くにある「Live」（音声会話）のボタンをタップする',
+      '音声モードに変わったら「よろしくお願いします」と話しかける',
+      '面接官の挨拶と第1問が始まったら、声で答えていく'
+    ],
+    claude:[
+      'セッティング文言を送信し、「準備ができました」と返事が来るのを確認する',
+      '入力欄の近くにある音声モードのボタンをタップする',
+      '音声モードに変わったら「よろしくお願いします」と話しかける',
+      '面接官の挨拶と第1問が始まったら、声で答えていく'
+    ]
+  };
+  function showHow(app){
+    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.app === app));
+    $('howto').innerHTML = HOW[app].map(t => '<li>' + t + '</li>').join('');
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => showHow(b.dataset.app)));
+
+  /* ---------- how-to cards ---------- */
+  const cardEls = $('cards').querySelectorAll('.card');
+  const last = cardEls.length - 1;
+  let cur = 0;
+  $('dots').innerHTML = Array.from(cardEls).map((c,i) => '<button aria-label="' + (i+1) + '枚目へ"></button>').join('');
+  const dotEls = $('dots').querySelectorAll('button');
+  function showCard(i){
+    cur = Math.max(0, Math.min(last, i));
+    cardEls.forEach((c,k) => c.classList.toggle('active', k === cur));
+    dotEls.forEach((d,k) => d.classList.toggle('on', k === cur));
+    $('cardPrev').disabled = cur === 0;
+    $('cardNext').textContent = cur === last ? '入力をはじめる' : '次へ →';
+    $('cardCount').textContent = (cur+1) + ' / ' + cardEls.length;
+  }
+  function updateDots(){ showCard(cur); }
+  $('cardPrev').addEventListener('click', () => showCard(cur - 1));
+  $('cardNext').addEventListener('click', () => {
+    if(cur === last){ setGuide(true); $('company').focus(); return; }
+    showCard(cur + 1);
+  });
+  dotEls.forEach((d,k) => d.addEventListener('click', () => showCard(k)));
+  /* 指で左右になぞっても送れるように */
+  let sx = null;
+  $('cards').addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+  $('cards').addEventListener('touchend', e => {
+    if(sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx; sx = null;
+    if(Math.abs(dx) > 40) showCard(cur + (dx < 0 ? 1 : -1));
+  }, {passive:true});
+  function setGuide(closed){
+    $('guide').dataset.closed = closed;
+    $('guideToggle').textContent = closed ? '使い方を見る' : '閉じる';
+    $('guideToggle').setAttribute('aria-expanded', !closed);
+    try{ localStorage.setItem(KEY + '-guide', closed ? '1' : '0'); }catch(e){}
+    if(!closed) updateDots();
+  }
+  $('guideToggle').addEventListener('click', () => setGuide($('guide').dataset.closed !== 'true'));
+  try{ if(localStorage.getItem(KEY + '-guide') === '1') setGuide(true); }catch(e){}
+  updateDots();
+
+  /* ---------- PWA ---------- */
+  if('serviceWorker' in navigator && location.protocol === 'https:'){
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  }
+
+  /* ---------- init ---------- */
+  restore();
+  toggleDocs();
+  showHow('gpt');
+  $('reviewOut').textContent = REVIEW;
+})();
+</script>
+</body>
+</html>

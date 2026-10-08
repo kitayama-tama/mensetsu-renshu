@@ -1,0 +1,17 @@
+{
+  "name": "スマホで模擬面接｜就活の木",
+  "short_name": "模擬面接",
+  "description": "AIアプリを面接官にして、24時間いつでも声で面接練習ができるツール",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EAF0EA",
+  "theme_color": "#2E5B45",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
